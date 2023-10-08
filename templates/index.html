@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>JSON Parser</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      textarea {
+        width: 100%;
+        height: 200px;
+      }
+      button {
+        margin-top: 10px;
+        background-color: green; /* Set the background color of the button to green */
+        color: white; /* Set the text color of the button to white */
+      }
+      .result {
+        margin-top: 20px;
+        color: blue; /* Set the font color of the result section to blue */
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Blueprint VLAN Audit</h1>
+    <h2>Get a list and count of all the VLANs assigned in your Apstra blueprint.</h2>
+
+    <p>In Apstra, navigate to `platform > developer > graph-explorer.`</p>
+
+    <p>Enter the following graph query and then click the Execute button.</p>
+
+    <p>
+      <pre><code>node('vn_instance', name='vn_instance')</code></pre>
+    </p>
+
+    <p>Copy the returned data and paste it into the vlans.json text area</p>
+
+    <form id="jsonForm">
+      <!-- Text area for the vlans.json data -->
+      <textarea id="jsonData1" placeholder="Enter your JSON data here"></textarea>
+
+      <!-- Second step for rz.json -->
+      <p>Enter the following graph query and then click the Execute button.</p>
+
+      <p>
+        <pre><code>node('security_zone', name='vn_instance')</code></pre>
+      </p>
+
+      <p>Copy the returned data and paste it into the rz.json text area</p>
+
+      <!-- Text area for the rz.json data -->
+      <textarea id="jsonData2" placeholder="Enter your JSON data here"></textarea>
+      <button type="submit">RUN</button>
+    </form>
+    <div id="resultContainer" class="result" style="display: none;">
+      <h2>Result:</h2>
+      <p>Total VLAN IDs: <span id="totalCount"></span></p>
+      <ol id="vlanIdList"></ol>
+    </div>
+
+    <script>
+      document.getElementById("jsonForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        var jsonData1 = document.getElementById("jsonData1").value;
+        var jsonData2 = document.getElementById("jsonData2").value;
+
+        var jsonData = [jsonData1, jsonData2]; // Combine the JSON data
+
+        fetch("/parse", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ jsonData: jsonData }),
+        })
+          .then(function (response) {
+            return response.json();
+          })
+          .then(function (data) {
+            displayResult(data);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      });
+
+      function displayResult(data) {
+        var resultContainer = document.getElementById("resultContainer");
+        var totalCountElement = document.getElementById("totalCount");
+        var vlanIdListElement = document.getElementById("vlanIdList");
+
+        totalCountElement.textContent = data.total_count;
+        vlanIdListElement.innerHTML = "";
+        data.vlan_ids.forEach(function (vlanId) {
+          var listItem = document.createElement("li");
+          listItem.textContent = vlanId;
+          vlanIdListElement.appendChild(listItem);
+        });
+
+        resultContainer.style.display = "block";
+      }
+    </script>
+  </body>
+</html>
